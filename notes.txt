@@ -1,0 +1,31 @@
+Roguelikes could be boring.
+Procedural generation is often boring.
+The immortal nature of an NPC can lead him to wish a quick and 
+not always painless death.
+
+You are the hero responsible to free them from their torments.
+
+SCOPE:
+The main scope of this roguelike is to explore the different ways to
+generate quests.
+Starting from a simple "Bring me obj." to more complex and nested tasks.
+
+Everyone can be killed at any time, everyone have unsolved quests.
+All of them need to be solved or partially completed in a specific order
+in order to achieve the maximum score.
+(i.e., someone want an apple from a tree and someone else want that tree
+destroyed)
+
+IDEAS:
+
+Gain exp. by killing people and improve skills (carry heavy obj).
+Discover areas with explosion.
+Dig?
+
+Quests:
+Bring object to.
+   Get Apple from tree.
+Cut Tree.
+Kill someone.
+Deliver message.
+   (Tell him I love him, reply I love her, we can die happily together)
