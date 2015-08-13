@@ -31,13 +31,14 @@
 */
 
 
-var Quest = function (obj, desc, test, rew, diag) {    
+var Quest = function (name, obj, desc, test, rew, diag) {
     this.obj = obj;
     this.completed   = false;
+    this.name        = name;
     this.description = desc !== undefined ? desc : this._def.description;
     this.test        = test !== undefined ? test : this._def.test;
     this.reward      = rew  !== undefined ? rew  : this._def.reward;
-    this.dialogs     = diag !== undefined ? diag : this._def.getDialogs;
+    this.dialogs     = diag !== undefined ? diag : this._def.getDialogs;    
 };
 
 Quest.version = "0.0.1";
@@ -48,9 +49,10 @@ Quest.prototype._def = {
     reward:      function () { return ""; },
     dialogs:     function () { return []; }
 };
-    
-Quest.prototype.start = function () { this.description(this.obj); };
-Quest.prototype.getDialogs = function () { return this.dialogs(this.obj); };
+Quest.prototype.getName     = function () { return this.name; };    
+Quest.prototype.start       = function () { this.description(this.obj); };
+Quest.prototype.getDialogs  = function () { return this.dialogs(this.obj); };
+Quest.prototype.isCompleted = function () { return this.completed; };
 
 Quest.prototype.act = function () {
     if (!this.completed)
