@@ -1,9 +1,26 @@
+/* 
+ * Copyright 2015 Eugenio Parodi <ceccopierangiolieugenio at googlemail>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+"use strict";
+
 function init_main() {
     Game.init();
 }
 
 var Game = {
-    display: null,
+    display: undefined,
     map: [],
     actors: [],
     quests: [],
@@ -69,22 +86,56 @@ var Game = {
 
         this._drawWholeMap();
     },
-    _createQuest: function (freeCells, trials) {        
+    _createQuest: function (freeCells) {        
         var actor = this._createActor(freeCells, 10);
-        if (actor != null) {
+        if (actor !== undefined) {
             this.actors.push(actor);
             var quest = new Quest(
                     {'actor':actor},
                     function (obj) { Game.log("Quest: You need to kill " + obj.actor.getName()); },
                     function (obj) { return !obj.actor.isAlive(); },
-                    function (obj) { Game.log("Quest Completed, You successfully killed " + obj.actor.getName()); }
+                    function (obj) { Game.log("Quest Completed, You successfully killed " + obj.actor.getName()); },
+                    function (obj) { return [new DiagMenuItem("kill", obj.actor.kill.bind(obj.actor))]; }
             );
             quest.start();
             this.scheduler.add(quest, true);
             this.quests.push(quest);
+            actor.addQuest(quest);
+            
+            quest = this._createRandomQuest(freeCells,actor);
+            if (quest !== undefined) {
+                this.scheduler.add(quest, true);
+                this.quests.push(quest);
+                actor.addQuest(quest);
+            }
+           
             return actor;
         }
-        return null;
+        return undefined;
+    },
+    _createRandomQuest: function (freeCells,actor) {
+        var index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
+        var key = freeCells.splice(index, 1)[0];
+        var apple = new Item(key.x, key.y, "apple", "a");
+        var quest = new Quest(
+                {'actor': actor},
+                function (obj) { Game.log("Quest: I would like to have an apple"); },
+                function (obj) { return obj.actor.getInventory().searchByName("apple") !== undefined; },
+                function (obj) { Game.log("Quest Completed, You gave an Apple to " + obj.actor.getName()); },
+                function (obj) { return [new DiagMenuItem("Give Apple",
+                                function () {
+                                    var item = Game.player.getInventory().searchByName("apple");
+                                    if (item === undefined){
+                                        Game.log(obj.actor.getName.call(obj.actor) + ": You don't have an apple");
+                                    }else{
+                                        Game.log(obj.actor.getName.call(obj.actor) + ": Thanks for this Apple");
+                                        Game.player.getInventory().removeItem(item);
+                                        obj.actor.getInventory.call(obj.actor).addItem(item);
+                                    }
+                                })];
+                }
+        );
+        return quest;
     },
     _createActor: function (freeCells, trials) {
         for (var t = 0; t < trials; t++) {
@@ -95,9 +146,10 @@ var Game = {
             } else {
                 // DEBUG
                 // Game.display.draw(key.x, key.y, "@", "#f00");
+                freeCells.push(key);
             }
         }
-        return null;
+        return undefined;
     },
     /* 
      _testActorPosition( x , y )
@@ -105,7 +157,7 @@ var Game = {
      */
     _testActorPosition: function (x, y) {
         /* find the first free slot around */
-        var startPos = null;
+        var startPos = undefined;
         for (var i = 0; i < ROT.DIRS[this.topology].length; i++) {
             var d = ROT.DIRS[this.topology][i];
             if (Game.map[x + d[0]][y + d[1]].isPassable()) {
@@ -113,8 +165,8 @@ var Game = {
                 break;
             }
         }
-        /* A null value means actor not reachable in any direction (weird) */
-        if (startPos == null)
+        /* A undefined value means actor not reachable in any direction (weird) */
+        if (startPos === undefined)
             return false;
         /* Check that any other free slot is reachable from the first one */
         Game.map[x][y].setPassable(false);
