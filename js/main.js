@@ -90,20 +90,17 @@ var Game = {
         var actor = this._createActor(freeCells, 10);
         if (actor !== undefined) {
             this.actors.push(actor);
-            var quest = new Quest(
-                    {'actor':actor},
-                    function (obj) { Game.log("Quest: You need to kill " + obj.actor.getName()); },
-                    function (obj) { return !obj.actor.isAlive(); },
-                    function (obj) { Game.log("Quest Completed, You successfully killed " + obj.actor.getName()); },
-                    function (obj) { return [new DiagMenuItem("kill", obj.actor.kill.bind(obj.actor))]; }
-            );
+            var quest = QuestGen.createKillQuest(actor);
             quest.start();
+            Game.log(quest.getName()+" - created");
             this.scheduler.add(quest, true);
             this.quests.push(quest);
             actor.addQuest(quest);
             
-            quest = this._createRandomQuest(freeCells,actor);
+            quest = QuestGen.createRandomQuest(freeCells,actor);
             if (quest !== undefined) {
+                quest.start();
+                Game.log(quest.getName()+" - created");
                 this.scheduler.add(quest, true);
                 this.quests.push(quest);
                 actor.addQuest(quest);
@@ -112,30 +109,6 @@ var Game = {
             return actor;
         }
         return undefined;
-    },
-    _createRandomQuest: function (freeCells,actor) {
-        var index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
-        var key = freeCells.splice(index, 1)[0];
-        var apple = new Item(key.x, key.y, "apple", "a");
-        var quest = new Quest(
-                {'actor': actor},
-                function (obj) { Game.log("Quest: I would like to have an apple"); },
-                function (obj) { return obj.actor.getInventory().searchByName("apple") !== undefined; },
-                function (obj) { Game.log("Quest Completed, You gave an Apple to " + obj.actor.getName()); },
-                function (obj) { return [new DiagMenuItem("Give Apple",
-                                function () {
-                                    var item = Game.player.getInventory().searchByName("apple");
-                                    if (item === undefined){
-                                        Game.log(obj.actor.getName.call(obj.actor) + ": You don't have an apple");
-                                    }else{
-                                        Game.log(obj.actor.getName.call(obj.actor) + ": Thanks for this Apple");
-                                        Game.player.getInventory().removeItem(item);
-                                        obj.actor.getInventory.call(obj.actor).addItem(item);
-                                    }
-                                })];
-                }
-        );
-        return quest;
     },
     _createActor: function (freeCells, trials) {
         for (var t = 0; t < trials; t++) {
@@ -224,6 +197,11 @@ var Game = {
             if (this.actors[i].isAlive())
                 return;
         Game.log("END, You happily get Bored to Death alone in this dungeon.");
+        for (var i = 0; i < this.quests.length; i++){
+            if (!this.quests[i].isCompleted()){
+                Game.log(this.quests[i].getName() + " - is not completed");
+            }
+        }
         Game.engine.lock();
     }
 };
