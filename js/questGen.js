@@ -29,7 +29,7 @@ var QuestGen = {
     createRandomQuest: function (freeCells, actor) {
         var rnd = Math.floor(ROT.RNG.getUniform() * 100);
         /* 20% quests */
-        if (rnd < 20)   return this._getAppleQuest(freeCells,actor);
+        if (rnd < 50)   return this._getItemQuest(freeCells,actor);
         return undefined;
     },
     _getAppleQuest: function (freeCells, actor) {
@@ -43,17 +43,51 @@ var QuestGen = {
                 function (obj) { return obj.actor.getInventory().searchByName("apple") !== undefined; },
                 function (obj) { Game.log("Quest Completed, You gave an Apple to " + obj.actor.getName()); },
                 function (obj) {
-                    return [new DiagMenuItem("Give Apple",
-                                function () {
-                                    var item = Game.player.getInventory().searchByName("apple");
-                                    if (item === undefined) {
-                                        Game.log(obj.actor.getName.call(obj.actor) + ": You don't have an apple");
-                                    } else {
-                                        Game.log(obj.actor.getName.call(obj.actor) + ": Thanks for this Apple");
-                                        Game.player.getInventory().removeItem(item);
-                                        obj.actor.getInventory.call(obj.actor).addItem(item);
-                                    }
-                                })];
+                    if (obj.completed === undefined) {
+                        return [new DiagMenuItem("Give Apple",
+                                    function () {
+                                        var item = Game.player.getInventory().searchByName("apple");
+                                        if (item === undefined) {
+                                            Game.log(obj.actor.getName.call(obj.actor) + ": You don't have an apple");
+                                        } else {
+                                            Game.log(obj.actor.getName.call(obj.actor) + ": Thanks for this Apple");
+                                            Game.player.getInventory().removeItem(item);
+                                            obj.actor.getInventory.call(obj.actor).addItem(item);
+                                            obj.completed = true;
+                                        }
+                                    })];
+                    }
+                    return [];
+                }
+        );
+        return quest;
+    },
+    _getItemQuest: function (freeCells, actor) {
+        var index = Math.floor(ROT.RNG.getUniform() * freeCells.length);
+        var key = freeCells.splice(index, 1)[0];
+        var item = Item.genRandomItem(key.x, key.y);
+        var quest = new Quest(
+                "Give " + item.getName() + " to " + actor.getName(),
+                {'actor': actor, 'item': item},
+                function (obj) { Game.log(obj.actor.getName() + " would like to have an apple"); },
+                function (obj) { return obj.actor.getInventory().searchByName(obj.item.getName()) !== undefined; },
+                function (obj) { Game.log("Quest Completed, You gave a " + obj.item.getName() + " to " + obj.actor.getName()); },
+                function (obj) {
+                    if (obj.completed === undefined) {
+                        return [new DiagMenuItem("Give " + obj.item.getName(),
+                                    function () {
+                                        var item = Game.player.getInventory().searchByName(obj.item.getName());
+                                        if (item === undefined) {
+                                            Game.log(obj.actor.getName.call(obj.actor) + ": You don't have an " + obj.item.getName());
+                                        } else {
+                                            Game.log(obj.actor.getName.call(obj.actor) + ": Thanks for this " + obj.item.getName());
+                                            Game.player.getInventory().removeItem(item);
+                                            obj.actor.getInventory.call(obj.actor).addItem(item);
+                                            obj.completed = true;
+                                        }
+                                    })];
+                    }
+                    return [];
                 }
         );
         return quest;
